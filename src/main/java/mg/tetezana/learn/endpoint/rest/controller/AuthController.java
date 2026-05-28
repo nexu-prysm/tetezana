@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import mg.tetezana.learn.repository.AppUserRepository;
 import mg.tetezana.learn.repository.model.AppUser;
 import mg.tetezana.learn.service.security.AuthService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,22 +21,32 @@ public class AuthController {
 
   private final AuthService authService;
   private final AppUserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @PostMapping("/login")
   public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
-    // Simple mock login for MVP phase.
-    // In reality, verify passwordHash (e.g., using BCrypt).
     AppUser user =
         userRepository
             .findByEmail(request.getEmail())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-    if (!user.getPasswordHash().equals(request.getPassword())) {
+    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
       throw new RuntimeException("Invalid credentials");
     }
 
     String token = authService.generateToken(user);
-    return ResponseEntity.ok(new TokenResponse(token));
+
+    ResponseCookie cookie = ResponseCookie.from("auth_token", token)
+        .httpOnly(true)
+        .secure(true) // In a real app, this might depend on the environment profile
+        .path("/")
+        .maxAge(authService.getJwtExpirationMs() / 1000)
+        .sameSite("Strict")
+        .build();
+
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(new TokenResponse("success"));
   }
 
   @Data

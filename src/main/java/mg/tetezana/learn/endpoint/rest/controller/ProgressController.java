@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import mg.tetezana.learn.repository.model.TaskProgress;
 import mg.tetezana.learn.service.ProgressService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/progress")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STUDENT')")
 public class ProgressController {
 
   private final ProgressService progressService;

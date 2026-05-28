@@ -24,6 +24,10 @@ public class AuthService {
     return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
+  public long getJwtExpirationMs() {
+    return jwtExpirationMs;
+  }
+
   public String generateToken(AppUser user) {
     return Jwts.builder()
         .subject(user.getEmail())

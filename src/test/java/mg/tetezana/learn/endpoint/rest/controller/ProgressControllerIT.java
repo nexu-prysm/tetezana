@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.servlet.http.Cookie;
 import mg.tetezana.learn.conf.FacadeIT;
 import mg.tetezana.learn.repository.AppUserRepository;
 import mg.tetezana.learn.repository.InternshipTrackRepository;
@@ -75,7 +76,7 @@ public class ProgressControllerIT extends FacadeIT {
     mockMvc
         .perform(
             post("/progress/tasks/" + task.getId() + "/start")
-                .header("Authorization", "Bearer " + token))
+                .cookie(new Cookie("auth_token", token)))
         .andExpect(status().isOk());
 
     // Then
@@ -88,7 +89,7 @@ public class ProgressControllerIT extends FacadeIT {
     mockMvc
         .perform(
             post("/progress/tasks/" + task.getId() + "/submit")
-                .header("Authorization", "Bearer " + token)
+                .cookie(new Cookie("auth_token", token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(submitJson))
         .andExpect(status().isOk());
@@ -100,3 +101,4 @@ public class ProgressControllerIT extends FacadeIT {
     assertEquals("Found C2 beaconing on IP 10.0.0.5", progress.getSubmissionData());
   }
 }
+
